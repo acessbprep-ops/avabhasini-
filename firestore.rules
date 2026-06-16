@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Entity Validations
+    function isValidUserProfile(profile) {
+      return profile is map &&
+        (!profile.keys().contains('name') || profile.name is string) &&
+        (!profile.keys().contains('dob') || profile.dob is string) &&
+        (!profile.keys().contains('sex') || profile.sex is string) &&
+        (!profile.keys().contains('state') || profile.state is string) &&
+        (!profile.keys().contains('phone') || profile.phone is string) &&
+        (!profile.keys().contains('occupation') || profile.occupation is string);
+    }
+
+    function isValidUser(user) {
+      return user is map &&
+        user.keys().hasAll(['profile', 'isProfileLocked']) &&
+        user.keys().size() <= 4 &&
+        isValidUserProfile(user.profile) &&
+        user.isProfileLocked is bool;
+    }
+
+    function isValidSession(session) {
+      return session is map &&
+        session.keys().hasAll(['sessionId', 'userProfile', 'answers', 'kushthaAnswers', 'date', 'createdAt']) &&
+        isValidUserProfile(session.userProfile) &&
+        session.sessionId is string &&
+        session.sessionId.size() <= 128 &&
+        session.answers is map &&
+        session.kushthaAnswers is map &&
+        session.date is string &&
+        session.date.size() <= 100 &&
+        (!session.keys().contains('images') || session.images is list);
+    }
+
+    // Matched paths
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      // We also allow listing in case the client needs query references
+      allow list: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidId(userId) && isValidUser(request.resource.data);
+      allow delete: if isOwner(userId);
+
+      match /sessions/{sessionId} {
+        allow get, list: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(userId) && isValidId(sessionId) && isValidSession(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

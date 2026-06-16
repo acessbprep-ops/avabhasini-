@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User Ayurvedic personal health profiling metrics",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "dob": { "type": "string" },
+        "age": { "type": "string" },
+        "sex": { "type": "string" },
+        "state": { "type": "string" },
+        "phone": { "type": "string" },
+        "occupation": { "type": "string" },
+        "chronicity": { "type": "string" },
+        "familyHistory": { "type": "string" }
+      }
+    },
+    "AnalysisResult": {
+      "title": "AnalysisResult",
+      "description": "Kushtha and Dosha diagnostic output from Gemini Expert Model",
+      "type": "object",
+      "properties": {
+        "primaryDosha": { "type": "string" },
+        "secondaryDosha": { "type": "string" },
+        "specificKushtha": { "type": "string" },
+        "modernClinicalCorrelation": { "type": "string" },
+        "icd11": { "type": "string" },
+        "tm2": { "type": "string" },
+        "description": { "type": "string" },
+        "confidenceScore": { "type": "number" }
+      }
+    },
+    "User": {
+      "title": "User",
+      "description": "User root document with profile structure and sync state",
+      "type": "object",
+      "properties": {
+        "profile": { "$ref": "UserProfile" },
+        "isProfileLocked": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["profile", "isProfileLocked"]
+    },
+    "Session": {
+      "title": "Session",
+      "description": "Individual evaluation diagnostics containing answers, images, and final result",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string" },
+        "userProfile": { "$ref": "UserProfile" },
+        "answers": { "type": "object" },
+        "kushthaAnswers": { "type": "object" },
+        "result": { "$ref": "AnalysisResult" },
+        "images": { "type": "array" },
+        "date": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sessionId", "userProfile", "answers", "kushthaAnswers", "date", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Root user profiles mapped by Auth UID"
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": "Session",
+      "description": "Diagnostic sessions of skin scanning history for the user"
+    }
+  }
+}

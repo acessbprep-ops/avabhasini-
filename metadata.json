@@ -1,0 +1,12 @@
+{
+  "name": "AVABHASINI",
+  "description": "High-precision Ayurvedic skin analysis utilizing Gemini Vision AI to identify Dosha dominance and Kushtha types with real-time confidence metrics and Samhita-mapped clinical reports.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "Vision AI",
+    "Ayurvedic Diagnosis",
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
